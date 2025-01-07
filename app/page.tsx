@@ -8,10 +8,11 @@ import {
   MessageCircle,
   Star,
   Mic,
-  MicOff,
-  Volume2
+  MicOff
+  // Volume2 // <-- Eliminado porque no se usa
 } from 'lucide-react';
 import { useConversation } from '@11labs/react';
+import Image from 'next/image';
 
 // Types
 type StepIcon = typeof MessageCircle | typeof Book | typeof Mic;
@@ -130,6 +131,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
     </div>
   );
 };
+
 // ================== Conversation Modal ==================
 interface ConversationModalProps {
   isOpen: boolean;
@@ -231,6 +233,7 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
     </div>
   );
 };
+
 // ================== MAIN PAGE ==================
 export default function Home() {
   // Form data
@@ -243,7 +246,7 @@ export default function Home() {
   const [teacher, setTeacher] = useState('beginner');
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300);
-  const [showTooltip, setShowTooltip] = useState(true);
+  // const [showTooltip, setShowTooltip] = useState(true);  // Eliminado porque no se usa
   const [audioLevel, setAudioLevel] = useState(0);
   const [isTurn, setIsTurn] = useState(false);
   const [speakingIndicator, setSpeakingIndicator] = useState('');
@@ -361,28 +364,28 @@ export default function Home() {
       setShowConversationModal(false);
     }
   }, [conversation]);
-  
-  // Timer
-useEffect(() => {
-  let timerId: NodeJS.Timeout | undefined;
-  
-  if (isActive && timeLeft > 0) {
-    timerId = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerId);
-          handleStop();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }
 
-  return () => {
-    if (timerId) clearInterval(timerId);
-  };
-}, [isActive, timeLeft, handleStop]); // <- Añadido handleStop aquí
+  // Timer
+  useEffect(() => {
+    let timerId: NodeJS.Timeout | undefined;
+    
+    if (isActive && timeLeft > 0) {
+      timerId = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerId);
+            handleStop();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+  
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [isActive, timeLeft, handleStop]);
 
   // Teachers data
   const teachers = [
@@ -392,7 +395,7 @@ useEffect(() => {
       levels: 'A1-A2 Levels',
       desc: 'Bilingual Expert',
       longDesc: 'Native Spanish speaker with perfect English. Specializes in helping beginners start their Spanish journey. Uses 80% English for instructions.',
-      icon: Book,
+      // Eliminamos const Icon = teach.icon; abajo, porque no lo usamos
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah&backgroundColor=b6e3f4'
     },
     { 
@@ -401,7 +404,6 @@ useEffect(() => {
       levels: 'B1-B2 Levels',
       desc: 'Conversation Specialist',
       longDesc: 'Native Spanish speaker focusing on conversational skills. Classes are 70% in Spanish with basic English support when needed.',
-      icon: MessageCircle,
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Carlos&backgroundColor=c1f4b6'
     },
     { 
@@ -410,7 +412,6 @@ useEffect(() => {
       levels: 'C1-C2 Levels',
       desc: 'Advanced Spanish Expert',
       longDesc: 'Native Spanish speaker specialized in advanced topics. Classes are 100% in Spanish, focusing on cultural nuances and complex conversations.',
-      icon: GraduationCap,
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Pedro&backgroundColor=f4d03f'
     }
   ];
@@ -448,7 +449,7 @@ useEffect(() => {
       });
 
       setIsActive(true);
-      setShowTooltip(false);
+      // setShowTooltip(false); // Eliminado
       setIsTurn(true);
       setSpeakingIndicator('Ready to start! You can speak now.');
       setShowConversationModal(true);
@@ -460,11 +461,18 @@ useEffect(() => {
       setIsTurn(false);
       setSpeakingIndicator('');
     }
-  }, [conversation, teacher, userName, userLevel, userLocation, userLessons]);
+  }, [
+    conversation,
+    teacher,
+    userName,
+    userLevel,
+    userLocation,
+    userLessons,
+    AGENTS // <-- Agregado para que no falte en la dependencia
+  ]);
 
   const isAIActive = isActive && !isTurn;
 
-  // [El return con el JSX se mantiene exactamente igual]
   return (
     <>
       {!hasSeenTutorial && (
@@ -564,7 +572,6 @@ useEffect(() => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {teachers.map((teach) => {
-                const Icon = teach.icon;
                 return (
                   <button
                     key={teach.id}
@@ -577,10 +584,12 @@ useEffect(() => {
                       ${isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="flex flex-col items-center gap-4 mb-3">
-                      <img 
+                      <Image
                         src={teach.image}
                         alt={teach.name}
-                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                        width={80}
+                        height={80}
+                        className="rounded-full object-cover border-2 border-gray-200"
                       />
                       <div className="text-center">
                         <div className="font-medium text-gray-900">{teach.name}</div>
@@ -635,4 +644,4 @@ useEffect(() => {
       />
     </>
   );
-} // <- Esta es la llave que falta para cerrar la función Home
+}
