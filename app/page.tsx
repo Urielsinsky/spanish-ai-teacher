@@ -44,7 +44,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
   
   const steps: { title: string; desc: string; icon: StepIcon }[] = [
     {
-      title: "Welcome to Spanish AI Teacher!",
+      title: "Welcome to ChidoLingo Spanish AI Teacher!",
       desc: "Let's get you ready for your first conversation in just 3 quick steps.",
       icon: MessageCircle
     },
@@ -183,7 +183,7 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
 
           {isUserTurn ? (
             <div className="text-green-600 font-semibold text-lg">
-              Your turn!
+              ¡Habla tú!
             </div>
           ) : (
             <div className="text-blue-600 font-semibold text-lg">
@@ -435,7 +435,13 @@ useEffect(() => {
         Ha tomado ${userLessons} clases previas.
         Se encuentra en ${userLocation}.
         Por favor, salúdalo en español y usa su nombre.
-        Ajusta la complejidad del vocabulario a nivel ${userLevel}.
+        Ajusta la complejidad del vocabulario y velocidad de habla a nivel ${userLevel}.
+        Tú serás el tutor de la clase y siempre llevarás la batuta de la clase, propondrás roleplays para hacer, dependiendo del nivel del estudiante, pero tú debes ser quien propone que hacer de manera breve y concisa.
+        Remember:
+- Never speak for more than 15 seconds at a time
+- Always wait for student response
+- If student is silent, prompt with simple questions
+- Keep corrections focused only on major pronunciation errors
       `;
       const firstMessage = `
         ¡Hola, ${userName}!
@@ -486,7 +492,7 @@ useEffect(() => {
           {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold text-gray-900">
-              Spanish AI Teacher
+            ChidoLingo Spanish AI Teacher
             </h1>
             <p className="text-gray-700">
               5 minutes of practice daily - Make every minute count!
@@ -526,14 +532,14 @@ useEffect(() => {
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Level (A1, A2, B1, etc.):
+                  Level (A1, A2, B1, B2, C1, C2.):
                 </label>
                 <input
                   type="text"
                   placeholder="E.g. A2"
                   value={userLevel}
                   onChange={(e) => setUserLevel(e.target.value)}
-                  className="border rounded p-2"
+                  className="border rounded p-2 text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={isActive}
                 />
               </div>
@@ -546,20 +552,20 @@ useEffect(() => {
                   placeholder="E.g. New York"
                   value={userLocation}
                   onChange={(e) => setUserLocation(e.target.value)}
-                  className="border rounded p-2"
+                  className="border rounded p-2 text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={isActive}
                 />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Previous Classes:
+                  Classes Taken:
                 </label>
                 <input
                   type="number"
                   placeholder="0"
                   value={userLessons}
                   onChange={(e) => setUserLessons(e.target.value)}
-                  className="border rounded p-2"
+                  className="border rounded p-2 text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={isActive}
                   min="0"
                 />
