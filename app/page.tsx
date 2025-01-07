@@ -400,7 +400,7 @@ useEffect(() => {
       id: 'beginner',
       name: 'Professor Sarah',
       levels: 'A1-A2 Levels',
-      desc: 'English-Spanish Expert',
+      desc: 'SPANISH TEACHER',
       longDesc: 'Perfect for complete beginners! Teaches in English while introducing Spanish gradually. Focuses on essential phrases, basic roleplay scenarios, and building confidence through practice.',
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah&backgroundColor=b6e3f4'
     },
@@ -408,16 +408,16 @@ useEffect(() => {
       id: 'intermediate',
       name: 'Profesor Carlos',
       levels: 'B1-B2 Levels',
-      desc: 'Conversation Specialist',
+      desc: 'SPANISH TEACHER',
       longDesc: 'Makes learning fun through roleplay! Practice ordering at cafes, discussing movies, and daily situations. Classes are 70% in Spanish with English support when needed.',
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Carlos&backgroundColor=c1f4b6'
     },
     { 
       id: 'advanced',
       name: 'Profesor Pedro',
-      levels: 'C1-C2 Levels',
-      desc: 'Advanced Spanish Expert',
-      longDesc: 'Natural Spanish conversations about culture, weather, current events, and more. Full immersion experience with focus on fluency and complex expressions.',
+      levels: 'English B1-B2',
+      desc: 'ENGLISH TEACHER',
+      longDesc: 'Practice your English with a native Spanish speaker who understands your learning journey. Perfect for intermediate English learners.',
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Pedro&backgroundColor=f4d03f'
     }
   ];
@@ -425,46 +425,93 @@ useEffect(() => {
   // Handlers
   const handleStart = useCallback(async () => {
     if (!isClient) return;
-
+  
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
+  
+      const getTeacherPrompt = () => {
+        const baseInfo = `
+          El usuario se llama ${userName}.
+          Se encuentra en ${userLocation}.
+          Ha tomado ${userLessons} clases previas.`;
+  
+        switch(teacher) {
+          case 'beginner':
+            return `${baseInfo}
+              Eres Sarah, una profesora bilingüe especializada en principiantes.
+              - Usa 80% inglés y 20% español
+              - Enseña frases básicas con su traducción
+              - Corrige pronunciación de manera amable
+              - Habla despacio al usar español
+              Ejemplo de interacción (no uses exactamente esta, es solo una guía):
+              Teacher: "Hi! Let's learn how to order food. Repeat after me: 'Me gustaria ordenar un cafe'"
+              Student: "Me gustaria ordenar un cafe"
+              Teacher: "Perfect! 'Me gustaría' means 'I would like'. Let's try with other drinks...`;
+          
+          case 'intermediate':
+            return `${baseInfo}
+              Eres Carlos, profesor de español basico-intermedio.
+              - Usa 80% español y 20% inglés
+              - Propón situaciones cotidianas para practicar
+              - Ayuda con vocabulario cuando sea necesario
 
-      const systemPrompt = `
-        El usuario se llama ${userName}.
-        Su nivel es ${userLevel}.
-        Ha tomado ${userLessons} clases previas.
-        Se encuentra en ${userLocation}.
-        Por favor, salúdalo en español y usa su nombre.
-        Ajusta la complejidad del vocabulario y velocidad de habla a nivel ${userLevel}.
-        Tú serás el tutor de la clase y siempre llevarás la batuta de la clase, propondrás roleplays para hacer, dependiendo del nivel del estudiante, pero tú debes ser quien propone que hacer de manera breve y concisa.
-        Remember:
-- Never speak for more than 15 seconds at a time
-- Always wait for student response
-- If student is silent, prompt with simple questions
-- Keep corrections focused only on major pronunciation errors
-      `;
-      const firstMessage = `
-        ¡Hola, ${userName}!
-        ¿Listo para practicar tu español hoy?
-        Tu nivel es ${userLevel}.
-        ¿Cómo estás?
-      `;
+              Ejemplo de interacción (adapta según la situación):
+              Teacher: "¿Has visto alguna película española últimamente?"
+              Student: "No, pero me gusta cinema español"
+              Teacher: "¡Ah! Se dice 'el cine español'. Te recomiendo la película..."`;
+          
+          case 'advanced':
+            return `${baseInfo}
+              You are Pedro, an English teacher for Spanish speakers.
+              - Focus on intermediate English conversation
+              - Help with pronunciation and vocabulary
+              - Correct major mistakes naturally
 
+              Example interaction (adapt based on context):
+              Teacher: "Tell me about your favorite places in Mexico"
+              Student: "I like visit beaches"
+              Teacher: "Oh, you like to visit beaches! Which ones..."`;
+        }
+      };
+  
+      const getFirstMessage = () => {
+        switch(teacher) {
+          case 'beginner':
+            return `
+              Hi ${userName}! How are you today?
+              I'll teach you three essential Spanish phrases, but first:
+              "¿Cómo estás?" means "How are you?"
+              Can you try saying that?`;
+          
+          case 'intermediate':
+            return `
+              ¡Hola ${userName}! ¿Cómo estás hoy?
+              ¿Te gustaría practicar con un roleplay?
+              Podemos simular: una cafetería, una conversación sobre películas o planear un viaje.
+              ¿Qué prefieres?`;
+          
+          case 'advanced':
+            return `
+              ¡Hi ${userName}! ¿How are you today?
+              ¿What's the weather like in ${userLocation}?`;
+        }
+      };
+  
       await conversation.startSession({
         agentId: AGENTS[teacher],
         overrides: {
           agent: {
-            prompt: { prompt: systemPrompt },
-            firstMessage
+            prompt: { prompt: getTeacherPrompt() },
+            firstMessage: getFirstMessage()
           }
         }
       });
-
+  
       setIsActive(true);
       setIsTurn(true);
       setSpeakingIndicator('Ready to start! You can speak now.');
       setShowConversationModal(true);
-
+  
     } catch (error) {
       console.error('Failed to start conversation:', error);
       alert('Failed to start conversation. Please make sure your microphone is connected and you have granted permission.');
@@ -472,15 +519,7 @@ useEffect(() => {
       setIsTurn(false);
       setSpeakingIndicator('');
     }
-  }, [
-    conversation,
-    teacher,
-    userName,
-    userLevel,
-    userLocation,
-    userLessons
-    // AGENTS está fuera, no lo agregamos aquí
-  ]);
+  }, [conversation, teacher, userName, userLevel, userLocation, userLessons]);
 
   return (
     <>
@@ -492,7 +531,7 @@ useEffect(() => {
           {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold text-gray-900">
-            ChidoLingo Spanish AI Teacher
+            ChidoLingo AI Teacher
             </h1>
             <p className="text-gray-700">
               5 minutes of practice daily - Make every minute count!
