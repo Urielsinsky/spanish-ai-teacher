@@ -12,13 +12,6 @@ import {
 import { useConversation } from '@11labs/react';
 import Image from 'next/image';
 
-// ================== AGENTS FUERA DEL COMPONENTE ==================
-const AGENTS = {
-  beginner: 'Y0A6rPDkYAA6wRz9KcVe',
-  intermediate: 'trEuMFO03pxC68JCeYyk',
-  advanced: 'pTQke6LmuVUUHJgv9Kfa'
-};
-
 // Types
 type StepIcon = typeof MessageCircle | typeof Book | typeof Mic;
 
@@ -242,6 +235,11 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
 
 // ================== MAIN PAGE ==================
 export default function Home() {
+  const AGENTS = {
+    beginner: process.env.NEXT_PUBLIC_BEGINNER_AGENT_ID || 'Y0A6rPDkYAA6wRz9KcVe',
+    intermediate: process.env.NEXT_PUBLIC_INTERMEDIATE_AGENT_ID || 'trEuMFO03pxC68JCeYyk',
+    advanced: process.env.NEXT_PUBLIC_ADVANCED_AGENT_ID || 'pTQke6LmuVUUHJgv9Kfa'
+  };
   // Form data
   const [userName, setUserName] = useState('');
   const [userLevel, setUserLevel] = useState('');
@@ -267,6 +265,13 @@ export default function Home() {
   }, []);
 
   // Conversation hook
+  interface ConversationMessage {
+    message: string;
+    source: string;
+    type: 'agent_response' | 'user_input' | string;
+  }
+  
+  // En el componente Home
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected');
@@ -280,7 +285,7 @@ export default function Home() {
       setSpeakingIndicator('');
       setShowConversationModal(false);
     },
-    onMessage: (message) => {
+    onMessage: (message: ConversationMessage) => {
       console.log('Message:', message);
       const isAIResponse = message.type === 'agent_response';
       setIsTurn(!isAIResponse);
@@ -300,53 +305,52 @@ export default function Home() {
     }
   });
 
-  // Audio monitoring
-  useEffect(() => {
-    if (!isClient || !isActive || !isTurn) return;
+ // Audio monitoring
+useEffect(() => {
+  if (!isClient || !isActive || !isTurn) return;
 
-    let audioContext: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let microphone: MediaStreamAudioSourceNode | null = null;
+  let audioContext: AudioContext | null = null;
+  let analyser: AnalyserNode | null = null;
+  let microphone: MediaStreamAudioSourceNode | null = null;
 
-    const initAudio = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Eliminamos el fallback a webkitAudioContext
-        const AudioContextClass = window.AudioContext as AudioContextType;
-
-        audioContext = new AudioContextClass();
-        analyser = audioContext.createAnalyser();
-        microphone = audioContext.createMediaStreamSource(stream);
-        microphone.connect(analyser);
-        analyser.fftSize = 256;
+  const initAudio = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Una sola inicialización del AudioContext
+      const AudioContextClass = window.AudioContext as AudioContextType;
+      audioContext = new AudioContextClass();
+      analyser = audioContext.createAnalyser();
+      microphone = audioContext.createMediaStreamSource(stream);
+      microphone.connect(analyser);
+      analyser.fftSize = 256;
+      
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      
+      const updateLevel = () => {
+        if (!analyser) return;
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+        setAudioLevel(average);
         
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        
-        const updateLevel = () => {
-          if (!analyser) return;
-          analyser.getByteFrequencyData(dataArray);
-          const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-          setAudioLevel(average);
-          
-          if (isActive && isTurn) {
-            requestAnimationFrame(updateLevel);
-          }
-        };
-        
-        updateLevel();
-      } catch (error) {
-        console.error('Error accessing microphone:', error);
-      }
-    };
+        if (isActive && isTurn) {
+          requestAnimationFrame(updateLevel);
+        }
+      };
+      
+      updateLevel();
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+    }
+  };
 
-    initAudio();
+  initAudio();
 
-    return () => {
-      if (audioContext) {
-        audioContext.close();
-      }
-    };
-  }, [isActive, isTurn]);
+  return () => {
+    if (audioContext) {
+      audioContext.close();
+    }
+  };
+}, [isActive, isTurn]);
 
   // Handle Stop
   const handleStop = useCallback(async () => {
@@ -377,7 +381,7 @@ export default function Home() {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timerId);
-            handleStop();
+            void handleStop();  // Añade void para manejar la promesa
             return 0;
           }
           return prev - 1;
@@ -587,6 +591,7 @@ export default function Home() {
                       alt={teach.name}
                       width={80}
                       height={80}
+                      unoptimized
                       className="rounded-full object-cover border-2 border-gray-200"
                     />
                     <div className="text-center">
