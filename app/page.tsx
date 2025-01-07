@@ -9,7 +9,6 @@ import {
   Star,
   Mic,
   MicOff
-  // Volume2 // <-- Eliminado porque no se usa
 } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 import Image from 'next/image';
@@ -240,13 +239,12 @@ export default function Home() {
   const [userName, setUserName] = useState('');
   const [userLevel, setUserLevel] = useState('');
   const [userLocation, setUserLocation] = useState('');
-  const [userLessons, setUserLessons] = useState('0');
+  const [userLessons, setUserLessons] = useState('0'); // <--- Sí lo usamos en el input
 
   // Main states
   const [teacher, setTeacher] = useState('beginner');
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300);
-  // const [showTooltip, setShowTooltip] = useState(true);  // Eliminado porque no se usa
   const [audioLevel, setAudioLevel] = useState(0);
   const [isTurn, setIsTurn] = useState(false);
   const [speakingIndicator, setSpeakingIndicator] = useState('');
@@ -286,7 +284,9 @@ export default function Home() {
       console.log('Message:', message);
       const isAIResponse = message.type === 'agent_response';
       setIsTurn(!isAIResponse);
-      setSpeakingIndicator(isAIResponse ? 'Teacher speaking...' : 'Your turn to speak!');
+      setSpeakingIndicator(
+        isAIResponse ? 'Teacher speaking...' : 'Your turn to speak!'
+      );
     },
     onError: (error) => {
       console.error('Conversation error:', error);
@@ -346,6 +346,7 @@ export default function Home() {
     };
   }, [isActive, isTurn]);
 
+  // Handle Stop
   const handleStop = useCallback(async () => {
     try {
       setIsActive(false);
@@ -365,7 +366,7 @@ export default function Home() {
     }
   }, [conversation]);
 
-  // Timer
+  // Timer with handleStop in dependencies
   useEffect(() => {
     let timerId: NodeJS.Timeout | undefined;
     
@@ -395,7 +396,6 @@ export default function Home() {
       levels: 'A1-A2 Levels',
       desc: 'Bilingual Expert',
       longDesc: 'Native Spanish speaker with perfect English. Specializes in helping beginners start their Spanish journey. Uses 80% English for instructions.',
-      // Eliminamos const Icon = teach.icon; abajo, porque no lo usamos
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah&backgroundColor=b6e3f4'
     },
     { 
@@ -449,7 +449,6 @@ export default function Home() {
       });
 
       setIsActive(true);
-      // setShowTooltip(false); // Eliminado
       setIsTurn(true);
       setSpeakingIndicator('Ready to start! You can speak now.');
       setShowConversationModal(true);
@@ -468,7 +467,7 @@ export default function Home() {
     userLevel,
     userLocation,
     userLessons,
-    AGENTS // <-- Agregado para que no falte en la dependencia
+    AGENTS // agregado para evitar el warning
   ]);
 
   const isAIActive = isActive && !isTurn;
@@ -571,38 +570,36 @@ export default function Home() {
               Select Your Teacher & Level
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {teachers.map((teach) => {
-                return (
-                  <button
-                    key={teach.id}
-                    onClick={() => !isActive && setTeacher(teach.id)}
-                    disabled={isActive}
-                    className={`p-4 rounded-lg border-2 text-left transition
-                      ${teacher === teach.id 
-                        ? 'border-green-500 bg-green-50 shadow-md' 
-                        : 'border-gray-200 hover:border-green-200'}
-                      ${isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex flex-col items-center gap-4 mb-3">
-                      <Image
-                        src={teach.image}
-                        alt={teach.name}
-                        width={80}
-                        height={80}
-                        className="rounded-full object-cover border-2 border-gray-200"
-                      />
-                      <div className="text-center">
-                        <div className="font-medium text-gray-900">{teach.name}</div>
-                        <div className="text-sm font-medium text-blue-600">{teach.levels}</div>
-                        <div className="text-sm text-gray-600 mt-1">{teach.desc}</div>
-                      </div>
+              {teachers.map((teach) => (
+                <button
+                  key={teach.id}
+                  onClick={() => !isActive && setTeacher(teach.id)}
+                  disabled={isActive}
+                  className={`p-4 rounded-lg border-2 text-left transition
+                    ${teacher === teach.id 
+                      ? 'border-green-500 bg-green-50 shadow-md' 
+                      : 'border-gray-200 hover:border-green-200'}
+                    ${isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex flex-col items-center gap-4 mb-3">
+                    <Image
+                      src={teach.image}
+                      alt={teach.name}
+                      width={80}
+                      height={80}
+                      className="rounded-full object-cover border-2 border-gray-200"
+                    />
+                    <div className="text-center">
+                      <div className="font-medium text-gray-900">{teach.name}</div>
+                      <div className="text-sm font-medium text-blue-600">{teach.levels}</div>
+                      <div className="text-sm text-gray-600 mt-1">{teach.desc}</div>
                     </div>
-                    <div className="text-sm text-gray-600 border-t pt-3">
-                      {teach.longDesc}
-                    </div>
-                  </button>
-                );
-              })}
+                  </div>
+                  <div className="text-sm text-gray-600 border-t pt-3">
+                    {teach.longDesc}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 

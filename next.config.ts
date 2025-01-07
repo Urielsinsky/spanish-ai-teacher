@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
+import { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  images: {
+    domains: ['api.dicebear.com'],
+  },
+  // otras opciones...
+}
 
-export default nextConfig;
+export default nextConfig
