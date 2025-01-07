@@ -472,8 +472,6 @@ export default function Home() {
     // AGENTS está fuera, no lo agregamos aquí
   ]);
 
-  const isAIActive = isActive && !isTurn;
-
   return (
     <>
       {!hasSeenTutorial && (
