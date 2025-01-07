@@ -400,8 +400,8 @@ useEffect(() => {
       id: 'beginner',
       name: 'Professor Sarah',
       levels: 'A1-A2 Levels',
-      desc: 'Bilingual Expert',
-      longDesc: 'Native Spanish speaker with perfect English. Specializes in helping beginners start their Spanish journey. Uses 80% English for instructions.',
+      desc: 'English-Spanish Expert',
+      longDesc: 'Perfect for complete beginners! Teaches in English while introducing Spanish gradually. Focuses on essential phrases, basic roleplay scenarios, and building confidence through practice.',
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah&backgroundColor=b6e3f4'
     },
     { 
@@ -409,7 +409,7 @@ useEffect(() => {
       name: 'Profesor Carlos',
       levels: 'B1-B2 Levels',
       desc: 'Conversation Specialist',
-      longDesc: 'Native Spanish speaker focusing on conversational skills. Classes are 70% in Spanish with basic English support when needed.',
+      longDesc: 'Makes learning fun through roleplay! Practice ordering at cafes, discussing movies, and daily situations. Classes are 70% in Spanish with English support when needed.',
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Carlos&backgroundColor=c1f4b6'
     },
     { 
@@ -417,7 +417,7 @@ useEffect(() => {
       name: 'Profesor Pedro',
       levels: 'C1-C2 Levels',
       desc: 'Advanced Spanish Expert',
-      longDesc: 'Native Spanish speaker specialized in advanced topics. Classes are 100% in Spanish, focusing on cultural nuances and complex conversations.',
+      longDesc: 'Natural Spanish conversations about culture, weather, current events, and more. Full immersion experience with focus on fluency and complex expressions.',
       image: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Pedro&backgroundColor=f4d03f'
     }
   ];
@@ -440,8 +440,8 @@ useEffect(() => {
       const firstMessage = `
         ¡Hola, ${userName}!
         ¿Listo para practicar tu español hoy?
-        He notado que tu nivel es ${userLevel}.
-        ¿Quieres practicar vocabulario de comida o de viajes?
+        Tu nivel es ${userLevel}.
+        ¿Cómo estás?
       `;
 
       await conversation.startSession({
@@ -520,7 +520,7 @@ useEffect(() => {
                   placeholder="E.g. John"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  className="border rounded p-2"
+                  className="border rounded p-2 text-gray-900 bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={isActive}
                 />
               </div>
