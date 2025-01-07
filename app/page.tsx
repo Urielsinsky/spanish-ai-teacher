@@ -4,14 +4,21 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Clock,
   Book,
-  GraduationCap,
   MessageCircle,
   Star,
   Mic,
   MicOff
+  // GraduationCap // <-- Eliminado porque no se usa
 } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 import Image from 'next/image';
+
+// ================== AGENTS FUERA DEL COMPONENTE ==================
+const AGENTS = {
+  beginner: 'Y0A6rPDkYAA6wRz9KcVe',
+  intermediate: 'trEuMFO03pxC68JCeYyk',
+  advanced: 'pTQke6LmuVUUHJgv9Kfa'
+};
 
 // Types
 type StepIcon = typeof MessageCircle | typeof Book | typeof Mic;
@@ -239,7 +246,7 @@ export default function Home() {
   const [userName, setUserName] = useState('');
   const [userLevel, setUserLevel] = useState('');
   const [userLocation, setUserLocation] = useState('');
-  const [userLessons, setUserLessons] = useState('0'); // <--- Sí lo usamos en el input
+  const [userLessons, setUserLessons] = useState('0'); 
 
   // Main states
   const [teacher, setTeacher] = useState('beginner');
@@ -250,13 +257,6 @@ export default function Home() {
   const [speakingIndicator, setSpeakingIndicator] = useState('');
   const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
   const [showConversationModal, setShowConversationModal] = useState(false);
-
-  // Agent IDs
-  const AGENTS = {
-    beginner: 'Y0A6rPDkYAA6wRz9KcVe',
-    intermediate: 'trEuMFO03pxC68JCeYyk',
-    advanced: 'pTQke6LmuVUUHJgv9Kfa'
-  };
 
   // Tutorial check
   useEffect(() => {
@@ -467,7 +467,7 @@ export default function Home() {
     userLevel,
     userLocation,
     userLessons,
-    AGENTS // agregado para evitar el warning
+    // AGENTS ya está definido fuera, no hace falta en las dependencias 
   ]);
 
   const isAIActive = isActive && !isTurn;
