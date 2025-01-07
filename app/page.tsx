@@ -8,7 +8,6 @@ import {
   Star,
   Mic,
   MicOff
-  // GraduationCap // <-- Eliminado porque no se usa
 } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 import Image from 'next/image';
@@ -22,12 +21,13 @@ const AGENTS = {
 
 // Types
 type StepIcon = typeof MessageCircle | typeof Book | typeof Mic;
-type AudioContextType = typeof AudioContext | typeof webkitAudioContext;
+
+// Eliminamos la referencia a `webkitAudioContext` por completo:
+type AudioContextType = typeof AudioContext;
 
 declare global {
-  interface Window {
-    webkitAudioContext: typeof AudioContext;
-  }
+  // Si deseas eliminar esto por completo, hazlo.
+  // Aquí ya no definimos webkitAudioContext en la ventana.
 }
 
 // Utils
@@ -246,7 +246,7 @@ export default function Home() {
   const [userName, setUserName] = useState('');
   const [userLevel, setUserLevel] = useState('');
   const [userLocation, setUserLocation] = useState('');
-  const [userLessons, setUserLessons] = useState('0'); 
+  const [userLessons, setUserLessons] = useState('0');
 
   // Main states
   const [teacher, setTeacher] = useState('beginner');
@@ -311,7 +311,9 @@ export default function Home() {
     const initAudio = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const AudioContextClass = (window.AudioContext || window.webkitAudioContext) as AudioContextType;
+        // Eliminamos el fallback a webkitAudioContext
+        const AudioContextClass = window.AudioContext as AudioContextType;
+
         audioContext = new AudioContextClass();
         analyser = audioContext.createAnalyser();
         microphone = audioContext.createMediaStreamSource(stream);
@@ -366,7 +368,7 @@ export default function Home() {
     }
   }, [conversation]);
 
-  // Timer with handleStop in dependencies
+  // Timer
   useEffect(() => {
     let timerId: NodeJS.Timeout | undefined;
     
@@ -466,8 +468,8 @@ export default function Home() {
     userName,
     userLevel,
     userLocation,
-    userLessons,
-    // AGENTS ya está definido fuera, no hace falta en las dependencias 
+    userLessons
+    // AGENTS está fuera, no lo agregamos aquí
   ]);
 
   const isAIActive = isActive && !isTurn;
@@ -634,7 +636,7 @@ export default function Home() {
       <ConversationModal
         isOpen={showConversationModal}
         onClose={handleStop}
-        isAIActive={isAIActive}
+        isAIActive={isActive && !isTurn}
         isUserTurn={isTurn}
         audioLevel={audioLevel}
         speakingIndicator={speakingIndicator}
