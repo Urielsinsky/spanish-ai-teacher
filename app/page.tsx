@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -13,7 +13,26 @@ import {
 } from 'lucide-react';
 import { useConversation } from '@11labs/react';
 
+// Types
 type StepIcon = typeof MessageCircle | typeof Book | typeof Mic;
+type AudioContextType = typeof AudioContext | typeof webkitAudioContext;
+
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext;
+  }
+}
+
+// Utils
+const isClient = typeof window !== 'undefined';
+const getLocalStorage = (key: string): string | null => {
+  if (!isClient) return null;
+  return localStorage.getItem(key);
+};
+const setLocalStorage = (key: string, value: string): void => {
+  if (!isClient) return;
+  localStorage.setItem(key, value);
+};
 
 // ================== Tutorial Overlay ==================
 interface TutorialOverlayProps {
@@ -42,7 +61,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
   ];
 
   const handleComplete = () => {
-    localStorage.setItem('hasSeenTutorial', 'true');
+    setLocalStorage('hasSeenTutorial', 'true');
     onComplete();
   };
 
@@ -111,14 +130,13 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ onComplete }) => {
     </div>
   );
 };
-
 // ================== Conversation Modal ==================
 interface ConversationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  isAIActive: boolean;     // true si habla la IA
-  isUserTurn: boolean;     // true si habla el user
-  audioLevel: number;      // nivel de audio user
+  isAIActive: boolean;
+  isUserTurn: boolean;
+  audioLevel: number;
   speakingIndicator: string;
 }
 
@@ -130,21 +148,18 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
   audioLevel,
   speakingIndicator
 }) => {
-  // Estado de barras “fake” para el ecualizador de la IA
   const [bars, setBars] = useState<number[]>([0, 0, 0, 0, 0]);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | undefined;
+    let interval: NodeJS.Timeout | undefined;
 
     if (isOpen && isAIActive) {
-      // La IA está hablando: movemos barras random
       interval = setInterval(() => {
         setBars(prev =>
           prev.map(() => Math.floor(Math.random() * 100))
         );
       }, 500);
     } else {
-      // Si NO habla la IA o NO está abierto el modal -> reset
       setBars([0, 0, 0, 0, 0]);
     }
 
@@ -153,36 +168,31 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
     };
   }, [isOpen, isAIActive]);
 
-  if (!isOpen) return null; // si no está abierto, no renderizamos nada
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Fondo con gradiente animado */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-animate opacity-90"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 animate-gradient opacity-90"></div>
       
       <div className="relative w-full h-full flex items-center justify-center p-4">
         <div className="relative bg-white/80 backdrop-blur-md p-6 rounded-lg shadow-lg max-w-md w-full">
-          {/* Título */}
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Conversación Activa
+            Active Conversation
           </h2>
 
-          {/* Turno */}
           {isUserTurn ? (
             <div className="text-green-600 font-semibold text-lg">
-              ¡Habla tú!
+              Your turn!
             </div>
           ) : (
             <div className="text-blue-600 font-semibold text-lg">
-              Hablando la IA
+              AI Speaking
             </div>
           )}
 
           <p className="text-sm text-gray-700 mt-2">{speakingIndicator}</p>
 
-          {/* Sección de visualizadores */}
           <div className="mt-4 flex flex-col items-center gap-4">
-            {/* Ondas de la IA */}
             {!isUserTurn && (
               <div className="flex items-end gap-1 h-20">
                 {bars.map((barHeight, idx) => (
@@ -195,7 +205,6 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
               </div>
             )}
 
-            {/* Barra de volumen user */}
             {isUserTurn && (
               <div className="flex flex-col items-center space-y-2">
                 <div className="w-40 h-2 bg-gray-300 rounded-full overflow-hidden">
@@ -211,7 +220,6 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
             )}
           </div>
 
-          {/* Botón para terminar */}
           <button
             onClick={onClose}
             className="mt-6 w-full py-3 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700"
@@ -223,29 +231,26 @@ const ConversationModal: React.FC<ConversationModalProps> = ({
     </div>
   );
 };
-
 // ================== MAIN PAGE ==================
 export default function Home() {
-  // Form de datos
+  // Form data
   const [userName, setUserName] = useState('');
   const [userLevel, setUserLevel] = useState('');
   const [userLocation, setUserLocation] = useState('');
   const [userLessons, setUserLessons] = useState('0');
 
-  // Estados principales
+  // Main states
   const [teacher, setTeacher] = useState('beginner');
   const [isActive, setIsActive] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 300 seg = 5 min
+  const [timeLeft, setTimeLeft] = useState(300);
   const [showTooltip, setShowTooltip] = useState(true);
   const [audioLevel, setAudioLevel] = useState(0);
   const [isTurn, setIsTurn] = useState(false);
   const [speakingIndicator, setSpeakingIndicator] = useState('');
   const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
-
-  // Mostrar/ocultar modal de conversación
   const [showConversationModal, setShowConversationModal] = useState(false);
 
-  // IDs de agentes
+  // Agent IDs
   const AGENTS = {
     beginner: 'Y0A6rPDkYAA6wRz9KcVe',
     intermediate: 'trEuMFO03pxC68JCeYyk',
@@ -254,11 +259,13 @@ export default function Home() {
 
   // Tutorial check
   useEffect(() => {
-    const tutorialSeen = localStorage.getItem('hasSeenTutorial');
-    setHasSeenTutorial(!!tutorialSeen);
+    if (isClient) {
+      const tutorialSeen = getLocalStorage('hasSeenTutorial');
+      setHasSeenTutorial(!!tutorialSeen);
+    }
   }, []);
 
-  // Hook conversacional
+  // Conversation hook
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected');
@@ -268,100 +275,114 @@ export default function Home() {
     onDisconnect: () => {
       console.log('Disconnected');
       setIsActive(false);
-      // NOTA: Omitimos setTimeLeft(300) aquí para que no se resetee
       setIsTurn(false);
       setSpeakingIndicator('');
       setShowConversationModal(false);
     },
     onMessage: (message) => {
       console.log('Message:', message);
-
-      // Revisa si es la IA
-      if (message.type === 'agent_response') {
-        // IA hablando
-        setIsTurn(false);
-        setSpeakingIndicator('Teacher speaking...');
-      } else {
-        // De lo contrario, turno del usuario
-        setIsTurn(true);
-        setSpeakingIndicator('Your turn to speak!');
-      }
+      const isAIResponse = message.type === 'agent_response';
+      setIsTurn(!isAIResponse);
+      setSpeakingIndicator(isAIResponse ? 'Teacher speaking...' : 'Your turn to speak!');
     },
     onError: (error) => {
       console.error('Conversation error:', error);
       setIsActive(false);
-      // NOTA: Omitimos setTimeLeft(300) para no resetear
       setIsTurn(false);
       setSpeakingIndicator('');
-      alert('The conversation ended unexpectedly. You can start a new one!');
       setShowConversationModal(false);
+      if (isClient) {
+        alert('The conversation ended unexpectedly. You can start a new one!');
+      }
     }
   });
 
-  // Audio level monitoring (para el user)
+  // Audio monitoring
   useEffect(() => {
-    if (isActive && isTurn) {
-      let audioContext: AudioContext | null = null;
-      let analyser: AnalyserNode | null = null;
-      let microphone: MediaStreamAudioSourceNode | null = null;
+    if (!isClient || !isActive || !isTurn) return;
 
-      const initAudio = async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          analyser = audioContext.createAnalyser();
-          microphone = audioContext.createMediaStreamSource(stream);
-          microphone.connect(analyser);
-          analyser.fftSize = 256;
+    let audioContext: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let microphone: MediaStreamAudioSourceNode | null = null;
+
+    const initAudio = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const AudioContextClass = (window.AudioContext || window.webkitAudioContext) as AudioContextType;
+        audioContext = new AudioContextClass();
+        analyser = audioContext.createAnalyser();
+        microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        analyser.fftSize = 256;
+        
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        const updateLevel = () => {
+          if (!analyser) return;
+          analyser.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+          setAudioLevel(average);
           
-          const dataArray = new Uint8Array(analyser.frequencyBinCount);
-          
-          const updateLevel = () => {
-            if (!analyser) return;
-            analyser.getByteFrequencyData(dataArray);
-            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-            setAudioLevel(average);
-            
-            if (isActive && isTurn) {
-              requestAnimationFrame(updateLevel);
-            }
-          };
-          
-          updateLevel();
-        } catch (error) {
-          console.error('Error accessing microphone:', error);
-        }
-      };
-
-      initAudio();
-
-      return () => {
-        if (audioContext) audioContext.close();
-      };
-    }
-  }, [isActive, isTurn]);
-
-  // Timer effect  
-  useEffect(() => {
-    let timerId: ReturnType<typeof setInterval> | undefined;
-    if (isActive && timeLeft > 0) {
-      timerId = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            // Cuando llegue a 0, paramos, pero NO reseteamos
-            clearInterval(timerId);
-            handleStop(); // si quieres terminar la conversación al llegar a 0
-            return 0;
+          if (isActive && isTurn) {
+            requestAnimationFrame(updateLevel);
           }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+        };
+        
+        updateLevel();
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+      }
+    };
+
+    initAudio();
 
     return () => {
-      if (timerId) clearInterval(timerId);
+      if (audioContext) {
+        audioContext.close();
+      }
     };
-  }, [isActive, timeLeft]);
+  }, [isActive, isTurn]);
+
+  const handleStop = useCallback(async () => {
+    try {
+      setIsActive(false);
+      setIsTurn(false);
+      setSpeakingIndicator('');
+      setShowConversationModal(false);
+
+      if (conversation.status === 'connected') {
+        await conversation.endSession();
+      }
+    } catch (error) {
+      console.error('Error ending conversation:', error);
+      setIsActive(false);
+      setIsTurn(false);
+      setSpeakingIndicator('');
+      setShowConversationModal(false);
+    }
+  }, [conversation]);
+  
+  // Timer
+useEffect(() => {
+  let timerId: NodeJS.Timeout | undefined;
+  
+  if (isActive && timeLeft > 0) {
+    timerId = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerId);
+          handleStop();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
+  return () => {
+    if (timerId) clearInterval(timerId);
+  };
+}, [isActive, timeLeft, handleStop]); // <- Añadido handleStop aquí
 
   // Teachers data
   const teachers = [
@@ -394,8 +415,10 @@ export default function Home() {
     }
   ];
 
-  // =============== START ===============
+  // Handlers
   const handleStart = useCallback(async () => {
+    if (!isClient) return;
+
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -434,43 +457,14 @@ export default function Home() {
       console.error('Failed to start conversation:', error);
       alert('Failed to start conversation. Please make sure your microphone is connected and you have granted permission.');
       setIsActive(false);
-      // Importante: no reseteamos timeLeft
       setIsTurn(false);
       setSpeakingIndicator('');
     }
-  }, [
-    conversation,
-    teacher,
-    userName,
-    userLevel,
-    userLocation,
-    userLessons
-  ]);
+  }, [conversation, teacher, userName, userLevel, userLocation, userLessons]);
 
-  // =============== STOP ===============
-  const handleStop = useCallback(async () => {
-    try {
-      setIsActive(false);
-      // NO reseteamos timeLeft aquí, para que no salte a 300
-      setIsTurn(false);
-      setSpeakingIndicator('');
-      setShowConversationModal(false);
-
-      if (conversation.status === 'connected') {
-        await conversation.endSession();
-      }
-    } catch (error) {
-      console.error('Error ending conversation:', error);
-      setIsActive(false);
-      setIsTurn(false);
-      setSpeakingIndicator('');
-      setShowConversationModal(false);
-    }
-  }, [conversation]);
-
-  // isAIActive => IA hablando si está activo y no es turno del user
   const isAIActive = isActive && !isTurn;
 
+  // [El return con el JSX se mantiene exactamente igual]
   return (
     <>
       {!hasSeenTutorial && (
@@ -502,56 +496,67 @@ export default function Home() {
             </div>
           </div>
 
-          {/* FORM DATOS */}
+          {/* User Data Form */}
           <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Tus Datos</h2>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                Nombre:
-              </label>
-              <input
-                type="text"
-                placeholder="Ej. Uriel"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                className="border rounded p-2"
-                disabled={isActive}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                Nivel (A1, A2, B1, etc.):
-              </label>
-              <input
-                type="text"
-                placeholder="Ej. A2"
-                value={userLevel}
-                onChange={(e) => setUserLevel(e.target.value)}
-                className="border rounded p-2"
-                disabled={isActive}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                Ubicación:
-              </label>
-              <input
-                type="text"
-                placeholder="Ej. CDMX"
-                value={userLocation}
-                onChange={(e) => setUserLocation(e.target.value)}
-                className="border rounded p-2"
-                disabled={isActive}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
-              </label>
-              
+            <h2 className="text-lg font-semibold text-gray-900">Your Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Name:
+                </label>
+                <input
+                  type="text"
+                  placeholder="E.g. John"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="border rounded p-2"
+                  disabled={isActive}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Level (A1, A2, B1, etc.):
+                </label>
+                <input
+                  type="text"
+                  placeholder="E.g. A2"
+                  value={userLevel}
+                  onChange={(e) => setUserLevel(e.target.value)}
+                  className="border rounded p-2"
+                  disabled={isActive}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Location:
+                </label>
+                <input
+                  type="text"
+                  placeholder="E.g. New York"
+                  value={userLocation}
+                  onChange={(e) => setUserLocation(e.target.value)}
+                  className="border rounded p-2"
+                  disabled={isActive}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Previous Classes:
+                </label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={userLessons}
+                  onChange={(e) => setUserLessons(e.target.value)}
+                  className="border rounded p-2"
+                  disabled={isActive}
+                  min="0"
+                />
+              </div>
             </div>
           </div>
 
-          {/* TEACHER SELECTION */}
+          {/* Teacher Selection */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <Star className="h-5 w-5 text-gray-700" />
@@ -578,15 +583,9 @@ export default function Home() {
                         className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                       />
                       <div className="text-center">
-                        <div className="font-medium text-gray-900">
-                          {teach.name}
-                        </div>
-                        <div className="text-sm font-medium text-blue-600">
-                          {teach.levels}
-                        </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {teach.desc}
-                        </div>
+                        <div className="font-medium text-gray-900">{teach.name}</div>
+                        <div className="text-sm font-medium text-blue-600">{teach.levels}</div>
+                        <div className="text-sm text-gray-600 mt-1">{teach.desc}</div>
                       </div>
                     </div>
                     <div className="text-sm text-gray-600 border-t pt-3">
@@ -598,7 +597,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* START/STOP */}
+          {/* Start/Stop Button */}
           <div className="space-y-4">
             <button
               onClick={isActive ? handleStop : handleStart}
@@ -625,7 +624,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* MODAL CONVERSACIÓN */}
+      {/* Conversation Modal */}
       <ConversationModal
         isOpen={showConversationModal}
         onClose={handleStop}
@@ -636,20 +635,4 @@ export default function Home() {
       />
     </>
   );
-}
-
-/* 
-   CSS Sugerido para la animación del gradiente:
-
-   .bg-animate {
-     background-size: 400% 400%;
-     animation: gradientShift 12s ease infinite;
-   }
-
-   @keyframes gradientShift {
-     0% { background-position: 0% 50%; }
-     50% { background-position: 100% 50%; }
-     100% { background-position: 0% 50%; }
-   }
-*/
-
+} // <- Esta es la llave que falta para cerrar la función Home
